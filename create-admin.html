@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Admin User</title>
+    <script src="https://unpkg.com/convex@1.27.3/dist/browser.js"></script>
+</head>
+<body>
+    <h1>Create Admin User</h1>
+    <button id="createAdmin">Create Admin: pnjokanma@yahoo.com</button>
+    <div id="result"></div>
+
+    <script>
+        // Initialize Convex client
+        const convex = new window.Convex("https://fleet-bobcat-14.convex.cloud");
+        
+        document.getElementById('createAdmin').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Creating admin user...';
+            
+            try {
+                const result = await convex.mutation("adminSetup:createAdminByEmail", {
+                    email: "pnjokanma@yahoo.com",
+                    name: "Admin User"
+                });
+                
+                resultDiv.innerHTML = `
+                    <h3>Success!</h3>
+                    <p>${result.message}</p>
+                    <p>User ID: ${result.userId}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>Error:</h3>
+                    <p style="color: red;">${error.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

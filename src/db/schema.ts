@@ -1,5 +1,5 @@
 import {
-	pgTable,
+	pgTableCreator,
 	text,
 	varchar,
 	integer,
@@ -8,10 +8,11 @@ import {
 	jsonb,
 	index,
 	uuid,
-	serial,
-	bigint,
 } from 'drizzle-orm/pg-core';
 import {relations} from 'drizzle-orm';
+
+// Create a custom table creator with a prefix
+const pgTable = pgTableCreator((name) => `el_elyon_${name}`);
 
 // Residents Table
 export const residents = pgTable(
@@ -552,7 +553,7 @@ export const locations = pgTable(
 	})
 );
 
-// HR Files Table (was missing from schema, adding based on hr_file_logs reference)
+// HR Files Table
 export const hrFiles = pgTable(
 	'hr_files',
 	{
@@ -624,5 +625,141 @@ export const complianceReminderTemplates = pgTable(
 		activeIdx: index('compliance_reminder_templates_active_idx').on(
 			table.active
 		),
+	})
+);
+
+// ============================
+// RELATIONS (Drizzle ORM)
+// ============================
+
+export const residentsRelations = relations(residents, ({many}) => ({
+	logs: many(residentLogs),
+	ispFiles: many(ispFiles),
+	isp: many(isp),
+	fireEvac: many(fireEvac),
+	guardianChecklistLinks: many(guardianChecklistLinks),
+	ispAccessLogs: many(ispAccessLogs),
+	ispAcknowledgments: many(ispAcknowledgments),
+}));
+
+export const employeesRelations = relations(employees, ({many}) => ({
+	hrFiles: many(hrFiles),
+	hrFileLogs: many(hrFileLogs),
+}));
+
+export const shiftsRelations = relations(shifts, ({one, many}) => ({
+	kiosk: one(kiosks, {
+		fields: [shifts.kioskId],
+		references: [kiosks.id],
+	}),
+	residentLogs: many(residentLogs),
+}));
+
+export const residentLogsRelations = relations(residentLogs, ({one}) => ({
+	resident: one(residents, {
+		fields: [residentLogs.residentId],
+		references: [residents.id],
+	}),
+	shift: one(shifts, {
+		fields: [residentLogs.shiftId],
+		references: [shifts.id],
+	}),
+}));
+
+export const ispFilesRelations = relations(ispFiles, ({one, many}) => ({
+	resident: one(residents, {
+		fields: [ispFiles.residentId],
+		references: [residents.id],
+	}),
+	accessLogs: many(ispAccessLogs),
+}));
+
+export const ispAccessLogsRelations = relations(ispAccessLogs, ({one}) => ({
+	ispFile: one(ispFiles, {
+		fields: [ispAccessLogs.ispFileId],
+		references: [ispFiles.id],
+	}),
+	resident: one(residents, {
+		fields: [ispAccessLogs.residentId],
+		references: [residents.id],
+	}),
+}));
+
+export const ispRelations = relations(isp, ({one, many}) => ({
+	resident: one(residents, {
+		fields: [isp.residentId],
+		references: [residents.id],
+	}),
+	acknowledgments: many(ispAcknowledgments),
+}));
+
+export const ispAcknowledgmentsRelations = relations(
+	ispAcknowledgments,
+	({one}) => ({
+		resident: one(residents, {
+			fields: [ispAcknowledgments.residentId],
+			references: [residents.id],
+		}),
+		isp: one(isp, {
+			fields: [ispAcknowledgments.ispId],
+			references: [isp.id],
+		}),
+	})
+);
+
+export const fireEvacRelations = relations(fireEvac, ({one}) => ({
+	resident: one(residents, {
+		fields: [fireEvac.residentId],
+		references: [residents.id],
+	}),
+}));
+
+export const guardianChecklistLinksRelations = relations(
+	guardianChecklistLinks,
+	({one}) => ({
+		resident: one(residents, {
+			fields: [guardianChecklistLinks.residentId],
+			references: [residents.id],
+		}),
+		template: one(guardianChecklistTemplates, {
+			fields: [guardianChecklistLinks.templateId],
+			references: [guardianChecklistTemplates.id],
+		}),
+	})
+);
+
+export const guardianChecklistTemplatesRelations = relations(
+	guardianChecklistTemplates,
+	({many}) => ({
+		links: many(guardianChecklistLinks),
+	})
+);
+
+export const hrFilesRelations = relations(hrFiles, ({one, many}) => ({
+	employee: one(employees, {
+		fields: [hrFiles.employeeId],
+		references: [employees.id],
+	}),
+	logs: many(hrFileLogs),
+}));
+
+export const hrFileLogsRelations = relations(hrFileLogs, ({one}) => ({
+	hrFile: one(hrFiles, {
+		fields: [hrFileLogs.hrFileId],
+		references: [hrFiles.id],
+	}),
+	employee: one(employees, {
+		fields: [hrFileLogs.employeeId],
+		references: [employees.id],
+	}),
+}));
+
+export const complianceReminderTemplatesRelations = relations(
+	complianceReminderTemplates,
+	({one}) => ({
+		createdByUser: one(users, {
+			fields: [complianceReminderTemplates.createdBy],
+			references: [users.id],
+		}),
 	})
 );

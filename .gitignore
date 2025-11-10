@@ -28,3 +28,6 @@ dist-ssr
 
 *.env
 *.env.local
+
+# Drizzle ORM auto-generated files
+drizzle/meta/

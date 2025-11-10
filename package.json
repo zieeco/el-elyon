@@ -4,11 +4,9 @@
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
-		"dev": "npm-run-all --parallel dev:frontend dev:backend",
-		"dev:frontend": "vite --open",
-		"dev:backend": "convex dev",
+		"dev": "vite --open",
 		"build": "vite build",
-		"lint": "tsc -p convex -noEmit --pretty false && tsc -p . -noEmit --pretty false && convex dev --once && vite build",
+		"lint": "tsc -p . -noEmit --pretty false && vite build",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
